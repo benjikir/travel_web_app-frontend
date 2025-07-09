@@ -1,7 +1,6 @@
-import React from 'react';
 import Header from "/src/components/Header";
 import Footer from "/src/components/Footer";
-import './App.css';
+import Map from "/src/components/Map";
 
 function App() {
   return (
@@ -9,8 +8,7 @@ function App() {
       <Header />
       <main>
         <div className="main-content">
-          <h2>The Travelweb App is currently in progress!</h2>
-          {/* The Travelweb App is finally launched! */}
+          <Map />
         </div>
       </main>
       <Footer />
