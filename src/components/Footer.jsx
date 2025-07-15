@@ -2,11 +2,16 @@ import 'leaflet/dist/leaflet.css';
 import '@maptiler/leaflet-maptilersdk';
 
 function Footer() {
-    return (
-    <footer style={{ padding: '1rem', background: '#1976d2', color: '#fff' }}>
-      <h4>The Travelweb App©</h4>
-      <nav>
-        <span href="/contact" style={{ color: '#fff' }}>Contact</span>
+  return (
+    <footer className="relative p-5 bg-slate-200 flex items-center text-black">
+      <div className="flex-1 flex justify-start">
+        {/* Empty div for left spacing or add left-side content here if needed */}
+      </div>
+      <div className="absolute left-1/2 transform -translate-x-1/2">
+        <h4>The Travelweb App©</h4>
+      </div>
+      <nav className="flex-1 flex justify-end">
+        <a href="/contact" className="text-black text-lg hover:text-blue-700">Contact</a>
       </nav>
     </footer>
   );
