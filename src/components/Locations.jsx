@@ -6,7 +6,7 @@ function Locations() {
     <div className="bg-blue-100 p-4 rounded-lg shadow-sm flex items-center justify-center h-full">
       <h3 className="text-xl font-semibold text-blue-800">Locations Component</h3>
       {/* Your future locations list or content will go here */}
-    </div>
+      </div>
   );
 }
 

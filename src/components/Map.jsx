@@ -10,6 +10,7 @@ import Trips from './Trips';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import CountryCounter from './CountryCounter';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -31,7 +32,7 @@ const styles = {
 const center = { lng: 0, lat: 0 };
 const initialZoom = 2;
 
-const Map = () => {
+const Map = ({ countriesToHighlight = [] }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const tileLayerRef = useRef(null);
@@ -90,16 +91,29 @@ const Map = () => {
     setMarkerPosition(null);
   };
 
+  // This useEffect would be responsible for highlighting countries on the map
+  // based on the 'countriesToHighlight' prop.
+  useEffect(() => {
+      console.log("Map: Highlighting countries:", countriesToHighlight);
+      // Implement your Leaflet/Maptiler logic here to actually highlight countries.
+      // You'll need geographic data for countries (e.g., GeoJSON boundaries).
+  }, [countriesToHighlight]);
+
+
   return (
     <div className="flex flex-col lg:flex-row h-[90vh] overflow-hidden shadow-lg border-white">
-      {/* Left Column: Map */}
+      {/* Left Column: Map and Overlays */}
       <div className="relative w-full lg:w-2/3 h-1/2 lg:h-full">
+        {/* Map Controls */}
         <MapControls
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           onReset={handleResetView}
         />
+        {/* Div for the Leaflet map instance */}
         <div ref={mapContainer} className="absolute inset-0 w-full h-full z-0" />
+
+        {/* Map Style Selector */}
         <div className="absolute top-4 right-4 z-10">
           <select
             value={style}
@@ -116,6 +130,11 @@ const Map = () => {
               </option>
             ))}
           </select>
+        </div>
+
+        {/* NEW: CountryCountDisplay component - absolutely positioned */}
+        <div className="absolute bottom-4 right-4 z-10">
+          <CountryCounter selectedCount={countriesToHighlight.length} />
         </div>
       </div>
 
