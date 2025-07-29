@@ -1,6 +1,5 @@
-import 'leaflet/dist/leaflet.css';
-import '@maptiler/leaflet-maptilersdk';
 import { Menu, User } from 'lucide-react';
+import logo from '../assets/globe-logo.svg'; // Correct path relative to components folder
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,8 +10,8 @@ import {
 
 function Header() {
   return (
-    <header className="relative p-4 bg-sky-100 shadow-sm">
-      <nav className="flex items-center justify-between">
+    <header className="p-4 md:p-7 bg-sky-100 shadow-sm">
+      <nav className="container mx-auto flex items-center justify-between">
         {/* Left side - Burger menu with dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -20,22 +19,26 @@ function Header() {
               <Menu className="h-6 w-6 text-gray-700" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem>Destinations</DropdownMenuItem>
-            <DropdownMenuItem>Travel Tips</DropdownMenuItem>
-            <DropdownMenuItem>About</DropdownMenuItem>
+          <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuItem className="cursor-pointer">Destinations</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">Travel Tips</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">About</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         
         {/* Center - App Title with Logo */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-3">
-          {/* Travel Logo */}
-          <div className="relative w-10 h-10">
-            
-          </div>
-          
-          <h1 className="text-2xl font-bold text-gray-700">Travelweb App</h1>
-        </div>
+        <div className="flex items-center space-x-3">
+  <h1 className="text-4xl font-bold text-gray-700">Travelweb App</h1>
+  <img 
+    src={logo} 
+    alt="Globe Logo" 
+    className="h-10 w-10 mr-4 object-contain"
+    onError={(e) => {
+      console.error("Logo failed to load");
+      e.currentTarget.style.display = 'none';
+    }}
+  />
+</div>
         
         {/* Right side - Profile icon with dropdown and Login button */}
         <div className="flex items-center space-x-3">
@@ -45,18 +48,18 @@ function Header() {
                 <User className="h-6 w-6 text-gray-700" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem className="cursor-pointer">Profile</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">Settings</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <a 
-            href="/Login" 
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-          >
-            Login
-          </a>
+          
+          <Button asChild>
+            <a href="/login" className="px-4 py-2">
+              Login
+            </a>
+          </Button>
         </div>
       </nav>
     </header>
