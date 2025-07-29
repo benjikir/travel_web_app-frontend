@@ -1,7 +1,10 @@
+
 {
   "compilerOptions": {
+    "baseUrl": "./src", // Crucial: Tells the compiler that 'src' is the base for module resolution
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"] // This means that "@/" will resolve to "baseUrl/" (i.e., "src/")
     }
-  }
+  },
+  "include": ["src"] // Tells the compiler which files to include for compilation/validation
 }
