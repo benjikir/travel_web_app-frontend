@@ -1,31 +1,40 @@
-// MapControls.jsx
+// src/components/MapControls.jsx
 import React from 'react';
-import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Home } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
-const MapControls = ({ onZoomIn, onZoomOut, onReset }) => {
+const MapControls = ({ onZoomIn, onZoomOut, onReset, className = "" }) => {
   return (
-    <div className="absolute top-4 left-4 z-10 flex flex-col space-y-2">
-      <button
+    <div className={`absolute top-4 left-4 z-10 flex flex-col space-y-2 ${className}`}>
+      <Button
         onClick={onZoomIn}
-        className="bg-white bg-opacity-80 rounded-md p-2 shadow-md hover:bg-opacity-100 transition-all"
+        size="icon"
+        variant="secondary"
+        className="bg-white/90 hover:bg-white shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105"
         aria-label="Zoom in"
       >
-        <ZoomIn className="h-5 w-5 text-gray-700" />
-      </button>
-      <button
+        <ZoomIn className="h-4 w-4 text-gray-700" />
+      </Button>
+      
+      <Button
         onClick={onZoomOut}
-        className="bg-white bg-opacity-80 rounded-md p-2 shadow-md hover:bg-opacity-100 transition-all"
+        size="icon"
+        variant="secondary"
+        className="bg-white/90 hover:bg-white shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105"
         aria-label="Zoom out"
       >
-        <ZoomOut className="h-5 w-5 text-gray-700" />
-      </button>
-      <button
+        <ZoomOut className="h-4 w-4 text-gray-700" />
+      </Button>
+      
+      <Button
         onClick={onReset}
-        className="bg-white bg-opacity-80 rounded-md p-2 shadow-md hover:bg-opacity-100 transition-all"
-        aria-label="Reset view"
+        size="icon"
+        variant="secondary"
+        className="bg-white/90 hover:bg-white shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105"
+        aria-label="Reset to world view"
       >
-        <RotateCcw className="h-5 w-5 text-gray-700" />
-      </button>
+        <Home className="h-4 w-4 text-gray-700" />
+      </Button>
     </div>
   );
 };
