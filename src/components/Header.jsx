@@ -20,9 +20,8 @@ function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuItem className="cursor-pointer">Destinations</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">Travel Tips</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">About</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">Home</DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer">About</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         
@@ -41,7 +40,7 @@ function Header() {
 </div>
         
         {/* Right side - Profile icon with dropdown and Login button */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-end-safe space-x-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="p-2 rounded-full hover:bg-sky-200">
@@ -55,11 +54,13 @@ function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <Button asChild>
-            <a href="/login" className="px-4 py-2">
+          {/* Login Button */}
+          
+            <Button asChild className="ml-auto bg-blue-600 hover:bg-blue-700 text-white">
+              <a href="/login" className="ml-auto bg-blue-600 hover:bg-blue-700">
               Login
             </a>
-          </Button>
+            </Button>
         </div>
       </nav>
     </header>

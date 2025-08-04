@@ -1,3 +1,4 @@
+// src/components/Map.jsx
 import React, { useRef, useEffect, useState } from 'react';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -6,12 +7,10 @@ import MapControls from './MapControls';
 import Locations from './Locations';     
 import Trips from './Trips';           
 
-
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import CountryCounter from './CountryCounter';
-import { Kanban } from 'lucide-react';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -33,7 +32,7 @@ const styles = {
 const center = { lng: 0, lat: 0 };
 const initialZoom = 2;
 
-const Map = ({ countriesToHighlight = [] }) => {
+const Map = ({ travelData }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const tileLayerRef = useRef(null);
@@ -92,14 +91,16 @@ const Map = ({ countriesToHighlight = [] }) => {
     setMarkerPosition(null);
   };
 
-  // This useEffect would be responsible for highlighting countries on the map
-  // based on the 'countriesToHighlight' prop.
+  // This useEffect highlights visited countries from the Flask API
   useEffect(() => {
-      console.log("Map: Highlighting countries:", countriesToHighlight);
+    if (travelData?.userCountries) {
+      console.log("Map: Highlighting visited countries:", travelData.userCountries);
       // Implement your Leaflet/Maptiler logic here to actually highlight countries.
       // You'll need geographic data for countries (e.g., GeoJSON boundaries).
-  }, [countriesToHighlight]);
-
+      // You can access the visited countries through travelData.userCountries
+      // Each userCountry should have country information
+    }
+  }, [travelData?.userCountries]);
 
   return (
     <div className="flex flex-col lg:flex-row h-[90vh] overflow-hidden shadow-lg border-white">
@@ -133,19 +134,22 @@ const Map = ({ countriesToHighlight = [] }) => {
           </select>
         </div>
 
-        {/* NEW: CountryCountDisplay component - absolutely positioned */}
+        {/* Country Counter - shows visited countries from API */}
         <div className="absolute bottom-4 right-4 z-10">
-          <CountryCounter selectedCount={countriesToHighlight.length} />
+          <CountryCounter 
+            selectedCount={travelData?.userCountries?.length || 0} 
+            loading={travelData?.loading?.userCountries || false}
+          />
         </div>
       </div>
 
       {/* Right Column: Locations and Trips */}
       <div className="w-full lg:w-1/3 h-1/2 lg:h-full p-4 bg-gray-100 flex flex-col gap-4">
         <div className="flex-1">
-          <Locations /> {/* Your Locations placeholder */}
+          <Locations travelData={travelData} />
         </div>
         <div className="flex-1">
-          <Trips />     {/* Your Trips placeholder */}
+          <Trips travelData={travelData} />
         </div>
       </div>
     </div>
