@@ -1,181 +1,116 @@
-// src/services/api.js
+// src/services/apiService.js
+import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:5001'; // Dein Flask-App Port
+// API-URL aus Vite env
+const API_URL = import.meta.env.VITE_API_URL
 
-class ApiService {
-  constructor() {
-    this.defaultUserId = 1; // Standard-User ID, kann später dynamisch werden
-  }
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-  async request(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      ...options,
-    };
+let currentUserId = null;
 
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
-  }
+// Aktuellen User setzen
+export const setCurrentUser = (userId) => {
+  currentUserId = userId;
+};
 
-  // Users API
-  async getUsers() {
-    return this.request('/users');
-  }
+// -------- USER COUNTRIES ----------
+export const getUserCountries = async (userId = currentUserId) => {
+  const res = await api.get(`/user-countries/${userId}`); // Corrected: Use /user-countries/:userId
+  return res.data;
+};
 
-  async getUser(userId) {
-    return this.request(`/users/${userId}`);
-  }
 
-  async createUser(userData) {
-    return this.request('/users', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-  }
+export const addUserCountry = async (countryData) => {
+  const res = await api.post(`/user-countries`, { ...countryData, userId: currentUserId });
+  return res.data;
+};
 
-  async updateUser(userId, userData) {
-    return this.request(`/users/${userId}`, {
-      method: 'PUT',
-      body: JSON.stringify(userData),
-    });
-  }
+export const deleteUserCountry = async (userId, countryId) => {
+  // Corrected DELETE route
+  await api.delete(`/user-countries/${userId}/${countryId}`);
+};
 
-  async deleteUser(userId) {
-    return this.request(`/users/${userId}`, {
-      method: 'DELETE',
-    });
-  }
+// -------- TRIPS ----------
 
-  // User Countries API (die Länder die ein User besucht hat)
-  async getUserCountries(userId = this.defaultUserId) {
-    return this.request(`/user-countries?user_id=${userId}`);
-  }
+export const getTrips = async (userId = currentUserId) => {
+  const res = await api.get(`/trips?userId=${userId}`); // This is correct
+  return res.data;
+};
 
-  async addUserCountry(countryData) {
-    return this.request('/user-countries', {
-      method: 'POST',
-      body: JSON.stringify({
-        user_id: this.defaultUserId,
-        ...countryData,
-      }),
-    });
-  }
 
-  async updateUserCountry(userCountryId, updateData) {
-    return this.request(`/user-countries/${userCountryId}`, {
-      method: 'PUT',
-      body: JSON.stringify(updateData),
-    });
-  }
+export const getTrip = async (tripId) => {
+  const res = await api.get(`/trips/${tripId}`); //  <---- ADD THIS
+  return res.data;
+};
 
-  async deleteUserCountry(userCountryId) {
-    return this.request(`/user-countries/${userCountryId}`, {
-      method: 'DELETE',
-    });
-  }
+export const addTrip = async (tripData) => {
+  const res = await api.post(`/trips`, { ...tripData, userId: currentUserId });
+  return res.data;
+};
 
-  // Locations API
-  async getLocations() {
-    return this.request('/locations');
-  }
+export const updateTrip = async (tripId, tripData) => {
+  const res = await api.put(`/trips/${tripId}`, tripData);
+  return res.data;
+};
 
-  async getLocationsByCountry(countryId) {
-    return this.request(`/locations?country_id=${countryId}`);
-  }
+export const deleteTrip = async (tripId) => {
+  await api.delete(`/trips/${tripId}`);
+};
 
-  async addLocation(locationData) {
-    return this.request('/locations', {
-      method: 'POST',
-      body: JSON.stringify(locationData),
-    });
-  }
+// -------- LOCATIONS ----------
+export const getAllLocations = async () => {
+  const res = await api.get(`/locations`);
+  return res.data;
+};
 
-  async updateLocation(locationId, locationData) {
-    return this.request(`/locations/${locationId}`, {
-      method: 'PUT',
-      body: JSON.stringify(locationData),
-    });
-  }
+export const getLocations = async (locationId) => { // <---- Hinzufügen
+  const res = await api.get(`/locations/${locationId}`);
+  return res.data;
+};
 
-  async deleteLocation(locationId) {
-    return this.request(`/locations/${locationId}`, {
-      method: 'DELETE',
-    });
-  }
+export const addLocation = async (locationData) => {
+  const res = await api.post(`/locations`, locationData);
+  return res.data;
+};
 
-  // Trips API
-  async getTrips(userId = this.defaultUserId) {
-    return this.request(`/trips?user_id=${userId}`);
-  }
+export const updateLocation = async (locationId, locationData) => {
+  const res = await api.put(`/locations/${locationId}`, locationData);
+  return res.data;
+};
 
-  async getTrip(tripId) {
-    return this.request(`/trips/${tripId}`);
-  }
+export const deleteLocation = async (locationId) => {
+  await api.delete(`/locations/${locationId}`);
+};
 
-  async addTrip(tripData) {
-    return this.request('/trips', {
-      method: 'POST',
-      body: JSON.stringify({
-        user_id: this.defaultUserId,
-        ...tripData,
-      }),
-    });
-  }
+// -------- USERS ----------
+export const getUsers = async () => {
+    const res = await api.get(`/users`);
+    return res.data;
+  };
 
-  async updateTrip(tripId, tripData) {
-    return this.request(`/trips/${tripId}`, {
-      method: 'PUT',
-      body: JSON.stringify(tripData),
-    });
-  }
+export const getUser = async (userId) => {  // <---- ADD THIS FUNCTION
+  const res = await api.get(`/users/${userId}`);
+  return res.data;
+};
 
-  async deleteTrip(tripId) {
-    return this.request(`/trips/${tripId}`, {
-      method: 'DELETE',
-    });
-  }
+export const createUser = async (userData) => {
+  const res = await api.post(`/users`, userData);
+  return res.data;
+};
 
-  // Utility methods
-  async getStats(userId = this.defaultUserId) {
-    try {
-      const [userCountries, trips, locations] = await Promise.all([
-        this.getUserCountries(userId),
-        this.getTrips(userId),
-        this.getLocations()
-      ]);
+export const updateUser = async (userId, userData) => {
+  const res = await api.put(`/users/${userId}`, userData);
+  return res.data;
+};
 
-      return {
-        countries: userCountries.length || 0,
-        trips: trips.length || 0,
-        locations: locations.length || 0
-      };
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      return { countries: 0, trips: 0, locations: 0 };
-    }
-  }
+export const deleteUser = async (userId) => {
+  await api.delete(`/users/${userId}`);
+};
 
-  // Set current user (für spätere Authentifizierung)
-  setCurrentUser(userId) {
-    this.defaultUserId = userId;
-  }
-}
-
-// Singleton instance
-const apiService = new ApiService();
-export default apiService;
+console.log();
+  
