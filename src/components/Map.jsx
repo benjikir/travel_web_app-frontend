@@ -24,7 +24,6 @@ const apiKey = import.meta.env.VITE_MAPTILER_API_KEY;
 const styles = {
   Streets: "streets-v2",
   Satellite: "satellite",
-  Dark: "dark-v2",
   Topo: "topo-v2",
   Basic: "basic-v2",
 };
@@ -40,6 +39,35 @@ const Map = ({ travelData }) => {
   const [style, setStyle] = useState(styles.Streets);
   const [markerPosition, setMarkerPosition] = useState(null);
 
+  // helper: reverse geocode a lat/lng using MapTiler Geocoding API
+  async function reverseGeocode(lat, lng) {
+    try {
+      const url = `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=${apiKey}&limit=1`;
+      const r = await fetch(url);
+      if (!r.ok) return null;
+      const data = await r.json();
+      const feat = data?.features?.[0];
+      if (!feat) return null;
+
+      const name = feat.properties?.name || feat.text || "";
+      const category = feat.properties?.category || feat.properties?.type || "";
+      const address = feat.properties?.formatted || feat.properties?.label || "";
+
+      // return simple HTML for popup
+      return `
+        <div class="text-sm">
+          <strong>${name || "Unknown place"}</strong>
+          ${category ? `<div class="text-xs text-gray-600">${category}</div>` : ""}
+          ${address ? `<div class="text-xs text-gray-700 mt-1">${address}</div>` : ""}
+          <div class="text-xs text-gray-500 mt-2">Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}</div>
+        </div>
+      `;
+    } catch (err) {
+      console.error("reverseGeocode error:", err);
+      return null;
+    }
+  }
+
   useEffect(() => {
     if (!map.current) {
       map.current = new L.Map(mapContainer.current, {
@@ -48,8 +76,27 @@ const Map = ({ travelData }) => {
         zoomControl: false,
       });
 
-      map.current.on('click', (e) => {
+      // click handler: set marker and show popup with reverse geocode (POI/address)
+      map.current.on('click', async (e) => {
+        const { lat, lng } = e.latlng;
         setMarkerPosition(e.latlng);
+
+        // remove previous marker if any
+        if (markerRef.current) {
+          map.current.removeLayer(markerRef.current);
+          markerRef.current = null;
+        }
+
+        // add marker
+        markerRef.current = L.marker([lat, lng]).addTo(map.current);
+
+        // fetch POI/address info and open popup
+        const popupHtml = await reverseGeocode(lat, lng);
+        if (popupHtml) {
+          markerRef.current.bindPopup(popupHtml).openPopup();
+        } else {
+          markerRef.current.bindPopup(`Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`).openPopup();
+        }
       });
     }
 

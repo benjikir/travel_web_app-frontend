@@ -1,13 +1,11 @@
 // src/components/Locations.jsx
 import React, { useState } from 'react';
-import { MapPin, Plus, Trash2, Edit } from 'lucide-react';
+import { MapPin, Plus, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const AddLocationForm = ({ onAdd, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
-    latitude: '',
-    longitude: '',
     country_id: '',
     description: ''
   });
@@ -17,11 +15,9 @@ const AddLocationForm = ({ onAdd, onCancel }) => {
     try {
       await onAdd({
         ...formData,
-        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         country_id: formData.country_id ? parseInt(formData.country_id) : null
       });
-      setFormData({ name: '', latitude: '', longitude: '', country_id: '', description: '' });
+      setFormData({ name: '', country_id: '', description: '' });
       onCancel();
     } catch (error) {
       console.error('Error adding location:', error);
@@ -39,25 +35,6 @@ const AddLocationForm = ({ onAdd, onCancel }) => {
         required
       />
       
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          type="number"
-          step="any"
-          placeholder="Latitude"
-          value={formData.latitude}
-          onChange={(e) => setFormData(prev => ({ ...prev, latitude: e.target.value }))}
-          className="p-2 border rounded text-sm"
-        />
-        <input
-          type="number"
-          step="any"
-          placeholder="Longitude"
-          value={formData.longitude}
-          onChange={(e) => setFormData(prev => ({ ...prev, longitude: e.target.value }))}
-          className="p-2 border rounded text-sm"
-        />
-      </div>
-
       <input
         type="number"
         placeholder="Country ID (optional)"
@@ -99,7 +76,7 @@ function Locations({ travelData }) {
       }
     }
   };
-
+  
   return (
     <div className="bg-blue-50 p-4 rounded-lg shadow-sm h-full flex flex-col">
       <div className="flex justify-between items-center mb-3">
@@ -137,17 +114,12 @@ function Locations({ travelData }) {
         ) : (
           <div className="space-y-2">
             {locations.map(location => (
-              <div key={location.id} className="bg-white p-3 rounded border shadow-sm">
+              <div key={location.location_id} className="bg-white p-3 rounded border shadow-sm">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-800">{location.name}</h4>
                     {location.country_id && (
                       <p className="text-sm text-gray-600">Country ID: {location.country_id}</p>
-                    )}
-                    {(location.latitude && location.longitude) && (
-                      <p className="text-xs text-gray-500">
-                        {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-                      </p>
                     )}
                     {location.description && (
                       <p className="text-sm text-gray-700 mt-1">{location.description}</p>
@@ -156,7 +128,7 @@ function Locations({ travelData }) {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleDelete(location.id)}
+                    onClick={() => handleDelete(location.location_id)}
                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4" />
