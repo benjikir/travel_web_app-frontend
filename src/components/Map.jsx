@@ -3,14 +3,14 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
-import MapControls from './MapControls';  
-import Locations from './Locations';     
-import Trips from './Trips';           
+import MapControls from './MapControls';
+import Locations from './Locations';
+import Trips from './Trips';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import CountryCounter from './CountryCounter';
-import { boolean } from 'zod';
+import { reverseGeocodeWithCountryId } from '@/utils/geocoding';
 
 // Leaflet Icon Fix
 delete L.Icon.Default.prototype._getIconUrl;
@@ -20,7 +20,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Map Configuration
 const apiKey = import.meta.env.VITE_MAPTILER_API_KEY;
 const styles = {
   Streets: "streets-v2",
@@ -37,35 +36,13 @@ const Map = ({ travelData }) => {
   const tileLayerRef = useRef(null);
   const markerRef = useRef(null);
   const [style, setStyle] = useState(styles.Streets);
-  const [newLocation, setNewLocation] = useState(null); // State for the new location data from map click
-  
+  const [newLocation, setNewLocation] = useState(null);
 
   const visitedCountriesCount = useMemo(() => {
     const ids = new Set(travelData.locations.map(loc => loc.country_id).filter(Boolean));
     return ids.size;
   }, [travelData.locations]);
-  
-  
-  async function reverseGeocode(lat, lng) {
-    try {
-      const url = `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=${apiKey}&limit=1`;
-      const r = await fetch(url);
-      if (!r.ok) return null;
-      const data = await r.json();
-      const feat = data?.features?.[0];
-      if (!feat) return null;
-      
-      const name = feat.properties?.name || feat.text || "";
-      const country = feat.properties?.country || "";
-      console.log("reverseGeocode result:", { name, country });
-      return { name, country };
-    } catch (err) {
-      console.error("reverseGeocode error:", err);
-      return null;
-    }
-  }
-  
-  // Initialize and manage the map instance
+
   useEffect(() => {
     if (!map.current) {
       map.current = new L.Map(mapContainer.current, {
@@ -73,48 +50,30 @@ const Map = ({ travelData }) => {
         zoom: initialZoom,
         zoomControl: false,
       });
-      
-      // Click handler: Set marker and prepare location data for the form
+
       map.current.on('click', async (e) => {
         const { lat, lng } = e.latlng;
-        
-        // Remove previous temporary marker if any
+
+        // Remove previous marker
         if (markerRef.current) {
           map.current.removeLayer(markerRef.current);
           markerRef.current = null;
         }
-        
-        // Add a new temporary marker
+
+        // Add temporary marker with loading popup
         markerRef.current = L.marker([lat, lng]).addTo(map.current);
-        
-        // Show loading popup on the marker
         markerRef.current.bindPopup(`
-          <div class="p-4">
-            <div class="flex items-center justify-center">
-              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-            <p class="text-center mt-2">Loading...</p>
+          <div class="p-4 text-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-2">Loading...</p>
           </div>
         `).openPopup();
-        
-        // Fetch place/address info
-        const geocodeData = await reverseGeocode(lat, lng);
-        
-        // Create a simple location object for the Locations component.
-        // It's the Locations component's job to find the country_id.
-        const locationDataForForm = {
-          name: geocodeData?.name || '',
-          country_name: geocodeData?.country || '',
-          description: '',
-          lat: lat,
-          lng: lng
-        };
-        
-        // Update state to pass to the Locations component, which will show the form
-        setNewLocation(locationDataForForm);
-        
-        // We're done with the marker, the form on the right is now the focus.
-        // Close the popup after a brief moment.
+
+        // Reverse geocode using MapTiler
+        const locationData = await reverseGeocodeWithCountryId(lat, lng, travelData.countries);
+        setNewLocation(locationData);
+
+        // Remove temporary marker after short delay
         setTimeout(() => {
           if (markerRef.current) {
             map.current.removeLayer(markerRef.current);
@@ -123,26 +82,22 @@ const Map = ({ travelData }) => {
         }, 500);
       });
     }
-    
-    // Update map style when it changes
+
+    // Update map style
     if (tileLayerRef.current) {
       map.current.removeLayer(tileLayerRef.current);
     }
-    tileLayerRef.current = new MaptilerLayer({
-      apiKey,
-      style,
-    }).addTo(map.current);
-    
-    // Cleanup on unmount
+    tileLayerRef.current = new MaptilerLayer({ apiKey, style }).addTo(map.current);
+
     return () => {
       if (map.current) {
-        map.current.off('click'); // Important to remove event listeners
+        map.current.off('click');
         map.current.remove();
         map.current = null;
       }
     };
-  }, [style, apiKey]); // Rerun effect if style or apiKey changes
-  
+  }, [style, apiKey, travelData.countries]);
+
   // Map control handlers
   const handleZoomIn = () => map.current?.zoomIn();
   const handleZoomOut = () => map.current?.zoomOut();
@@ -154,12 +109,10 @@ const Map = ({ travelData }) => {
     }
     setNewLocation(null);
   };
-  
-  // ... (useEffect for highlighting countries can remain the same)
-  
+
   return (
     <div className="flex flex-col lg:flex-row h-[90vh] overflow-hidden shadow-lg border-white">
-      {/* Left Column: Map and Overlays */}
+      {/* Left Column: Map */}
       <div className="relative w-full lg:w-2/3 h-1/2 lg:h-full">
         <MapControls
           onZoomIn={handleZoomIn}
@@ -174,30 +127,25 @@ const Map = ({ travelData }) => {
             className="block w-full px-4 py-2 text-base text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-400 appearance-none"
           >
             {Object.entries(styles).map(([label, value]) => (
-              <option key={value} value={value} className="text-gray-700">
-                {label}
-              </option>
+              <option key={value} value={value}>{label}</option>
             ))}
           </select>
         </div>
         <div className="absolute bottom-4 right-4 z-10">
-          <CountryCounter 
-            selectedCount={visitedCountriesCount} 
+          <CountryCounter
+            selectedCount={visitedCountriesCount}
             loading={travelData?.loading?.locations || false}
           />
         </div>
       </div>
-      
+
       {/* Right Column: Locations and Trips */}
       <div className="w-full lg:w-1/3 h-1/2 lg:h-full p-4 bg-gray-100 flex flex-col gap-4">
         <div className="flex-1">
-          <Locations 
-            travelData={travelData} 
-            mapLocation={newLocation}
-            onLocationAdded={() => {
-              // Reset location state after successful addition
-              setNewLocation(null);
-            }}
+          <Locations
+            travelData={travelData}
+            mapLocation={newLocation}  // <- city & state werden hier automatisch übergeben
+            onLocationAdded={() => setNewLocation(null)}
           />
         </div>
         <div className="flex-1">
