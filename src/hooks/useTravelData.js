@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import * as api from "@/services/api";
 
+
 export const useTravelData = (userId) => {
   // State for holding all the fetched data
   const [data, setData] = useState({
@@ -77,6 +78,8 @@ export const useTravelData = (userId) => {
    
     loadData();
   }, [userId]);
+
+
 
   // --- Action Functions for Locations ---
   const addLocation = async (locationData) => {

@@ -1,5 +1,5 @@
 // src/components/Map.jsx
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
@@ -10,6 +10,7 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import CountryCounter from './CountryCounter';
+import { boolean } from 'zod';
 
 // Leaflet Icon Fix
 delete L.Icon.Default.prototype._getIconUrl;
@@ -38,7 +39,13 @@ const Map = ({ travelData }) => {
   const [style, setStyle] = useState(styles.Streets);
   const [newLocation, setNewLocation] = useState(null); // State for the new location data from map click
   
-  // Helper: reverse geocode a lat/lng using MapTiler Geocoding API
+
+  const visitedCountriesCount = useMemo(() => {
+    const ids = new Set(travelData.locations.map(loc => loc.country_id).filter(Boolean));
+    return ids.size;
+  }, [travelData.locations]);
+  
+  
   async function reverseGeocode(lat, lng) {
     try {
       const url = `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=${apiKey}&limit=1`;
@@ -175,8 +182,8 @@ const Map = ({ travelData }) => {
         </div>
         <div className="absolute bottom-4 right-4 z-10">
           <CountryCounter 
-            selectedCount={travelData?.userCountries || 0} 
-            loading={travelData?.loading?.userCountries || false}
+            selectedCount={visitedCountriesCount} 
+            loading={travelData?.loading?.locations || false}
           />
         </div>
       </div>
