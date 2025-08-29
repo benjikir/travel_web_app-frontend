@@ -10,6 +10,7 @@ function Locations({ travelData, mapLocation, onLocationAdded }) {
   const [formData, setFormData] = useState({
     name: '',
     country_id: '',
+    country_name: '',
     description: '',
     lat: '',
     lng: '',
@@ -17,45 +18,69 @@ function Locations({ travelData, mapLocation, onLocationAdded }) {
     state: ''
   });
 
-  // Quick lookup map for country_id → country name
   const countryMap = React.useMemo(() => {
-    if (!countries) return {};
+    if (!countries || countries.length === 0) return {};
     return countries.reduce((acc, c) => {
       acc[c.country_id] = c.country;
       return acc;
     }, {});
   }, [countries]);
 
-  // ✅ Populate form when a new map location is clicked
+  // ✅ Dies ist der finale, korrigierte useEffect
   useEffect(() => {
+    // Schritt 1: Das Formular wird immer angezeigt, sobald ein Klick erfolgt.
     if (mapLocation) {
-      const countryFound = countries?.find(
-        c => c.country.toLowerCase() === mapLocation.country_name?.toLowerCase()
-      );
+      let foundCountryId = ''; // Standardmäßig ist die ID leer.
 
+      // Schritt 2: Wir versuchen den Abgleich NUR, wenn die Länderliste bereits geladen ist.
+      if (countries && countries.length > 0) {
+        const nameFromApi = mapLocation.country_name?.toLowerCase() || 'LEER';
+
+        // --- WICHTIGE DIAGNOSE-AUSGABE ---
+        console.log("--- Locations.jsx: Abgleich der Länder ---");
+        console.log(`API liefert: "${nameFromApi}"`);
+        console.log("DB enthält (Beispiele):", countries.slice(0, 5).map(c => c.country.toLowerCase()));
+        
+        const countryFound = countries.find(
+          c => c.country.toLowerCase() === nameFromApi
+        );
+
+        if (countryFound) {
+          console.log(`ERFOLG: ID ${countryFound.country_id} für "${nameFromApi}" gefunden.`);
+          foundCountryId = countryFound.country_id;
+        } else {
+          console.error(`FEHLER: Der API-Name "${nameFromApi}" wurde in der Datenbank nicht gefunden.`);
+        }
+      } else {
+        console.warn("Länderliste noch nicht geladen. 'country_id' kann nicht ermittelt werden.");
+      }
+
+      // Schritt 3: Wir füllen das Formular mit den Daten.
       setFormData({
         name: mapLocation.name || '',
-        country_id: countryFound?.country_id || '',
+        country_id: foundCountryId, // Wir verwenden die ID, die wir gefunden haben (oder leer).
+        country_name: mapLocation.country_name || '', // Wir zeigen immer den Namen von der API an.
         description: mapLocation.description || '',
-        lat: mapLocation.lat?.toFixed(6) || '',   // runde für bessere Lesbarkeit
+        lat: mapLocation.lat?.toFixed(6) || '',
         lng: mapLocation.lng?.toFixed(6) || '',
         city: mapLocation.city || '',
         state: mapLocation.state || ''
       });
-      setShowAddForm(true);
+      
+      setShowAddForm(true); // Das Formular wird jetzt zuverlässig angezeigt.
     }
   }, [mapLocation, countries]);
 
   const handleAddLocation = async (e) => {
     e.preventDefault();
     if (!formData.country_id) {
-      alert('Could not auto-detect the country or country not in database. Please select a country.');
+      alert('Could not auto-detect the country or country not in database. Please check the console logs for mismatches.');
       return;
     }
     try {
       await addLocation(formData);
       setShowAddForm(false);
-      setFormData({ name: '', country_id: '', description: '', lat: '', lng: '', city: '', state: '' });
+      setFormData({ name: '', country_id: '', country_name: '', description: '', lat: '', lng: '', city: '', state: '' });
       if (onLocationAdded) onLocationAdded();
     } catch (error) {
       alert(`Error adding location: ${error.message || 'Unknown error'}`);
@@ -74,10 +99,11 @@ function Locations({ travelData, mapLocation, onLocationAdded }) {
 
   const handleCancel = () => {
     setShowAddForm(false);
-    setFormData({ name: '', country_id: '', description: '', lat: '', lng: '', city: '', state: '' });
+    setFormData({ name: '', country_id: '', country_name: '', description: '', lat: '', lng: '', city: '', state: '' });
     if (onLocationAdded) onLocationAdded();
   };
 
+  // --- Der Rest der Datei (JSX) bleibt unverändert ---
   return (
     <div className="bg-blue-50 p-4 rounded-lg shadow-sm h-full flex flex-col">
       <div className="flex justify-between items-center mb-3">
@@ -100,8 +126,6 @@ function Locations({ travelData, mapLocation, onLocationAdded }) {
             className="w-full p-2 border rounded text-sm"
             required
           />
-
-          {/* City */}
           <input
             type="text"
             placeholder="City"
@@ -109,8 +133,6 @@ function Locations({ travelData, mapLocation, onLocationAdded }) {
             onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
             className="w-full p-2 border rounded text-sm"
           />
-
-          {/* State */}
           <input
             type="text"
             placeholder="State"
@@ -118,21 +140,13 @@ function Locations({ travelData, mapLocation, onLocationAdded }) {
             onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
             className="w-full p-2 border rounded text-sm"
           />
-
-          {/* Country Dropdown */}
-          <select
-            value={formData.country_id}
-            onChange={(e) => setFormData(prev => ({ ...prev, country_id: e.target.value }))}
-            className="w-full p-2 border rounded text-sm"
-            required
-          >
-            <option value="" disabled>-- Select a Country --</option>
-            {countries.map(c => (
-              <option key={c.country_id} value={c.country_id}>{c.country}</option>
-            ))}
-          </select>
-
-          {/* Lat/Lng Readonly */}
+          <input
+            type="text"
+            placeholder="Country"
+            value={formData.country_name || ''}
+            readOnly
+            className="w-full p-2 border rounded text-sm bg-gray-100"
+          />
           <div className="flex gap-2">
             <input
               type="text"
@@ -149,7 +163,6 @@ function Locations({ travelData, mapLocation, onLocationAdded }) {
               className="w-1/2 p-2 border rounded text-sm bg-gray-100"
             />
           </div>
-
           <textarea
             placeholder="Description (optional)"
             value={formData.description}
@@ -157,7 +170,6 @@ function Locations({ travelData, mapLocation, onLocationAdded }) {
             className="w-full p-2 border rounded text-sm"
             rows="2"
           />
-
           <div className="flex gap-2">
             <Button type="submit" size="sm" className="flex-1">Add Location</Button>
             <Button type="button" variant="outline" size="sm" onClick={handleCancel}>Cancel</Button>
