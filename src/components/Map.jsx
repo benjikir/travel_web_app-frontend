@@ -10,7 +10,8 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import CountryCounter from './CountryCounter';
-import { reverseGeocodeWithCountryId } from '@/utils/geocoding';
+import { reverseGeocode } from '@/utils/geocoding';
+import id from 'zod/v4/locales/id.cjs';
 
 // Leaflet Icon Fix
 delete L.Icon.Default.prototype._getIconUrl;
@@ -70,8 +71,8 @@ const Map = ({ travelData }) => {
         `).openPopup();
 
         // Reverse geocode using MapTiler
-        const locationData = await reverseGeocodeWithCountryId(lat, lng, travelData.countries);
-        setNewLocation(locationData);
+        const locationData = await reverseGeocode(lat, lng, travelData.countries);
+        setNewLocation({...locationData, id: Date.now() });
 
         // Remove temporary marker after short delay
         setTimeout(() => {

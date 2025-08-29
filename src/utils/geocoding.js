@@ -1,75 +1,59 @@
 // src/utils/geocoding.js
-export const findCountryIdByName = (countries, countryName) => {
-  if (!countries || !countryName) return null;
-  const country = countries.find(
-    c => c.country.toLowerCase() === countryName.toLowerCase()
-  );
-  return country ? country.country_id : null;
-};
 
-// Fallback mit OpenStreetMap/Nominatim, falls MapTiler keine Stadt/State liefert
+// Fallback: Erzwingt jetzt ebenfalls Englisch mit `accept-language=en`
 const fallbackReverseGeocode = async (lat, lng) => {
   try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`;
+    console.log("--> Führe Fallback zu Nominatim aus (erzwinge Englisch)...");
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=en`;
     const res = await fetch(url);
-    if (!res.ok) return { city: '', state: '' };
+    if (!res.ok) return { city: '', state: '', country: '' };
     const data = await res.json();
     return {
       city: data.address.city || data.address.town || data.address.village || '',
       state: data.address.state || '',
+      country: data.address.country || ''
     };
   } catch (err) {
     console.error("Fallback reverse geocode error:", err);
-    return { city: '', state: '' };
+    return { city: '', state: '', country: '' };
   }
 };
 
-// Hauptfunktion: MapTiler + Fallback
-export const reverseGeocodeWithCountryId = async (lat, lng, countries) => {
+// Hauptfunktion: Erzwingt Englisch bei MapTiler
+export const reverseGeocode = async (lat, lng) => {
   try {
     const apiKey = import.meta.env.VITE_MAPTILER_API_KEY;
-    const url = `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=${apiKey}&limit=1`;
-    const response = await fetch(url);
+    const url = `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=${apiKey}&limit=1&language=en`;
+    const response = await fetch(url, { cache: 'no-store' }); // Deaktiviert explizit Caching für diese Anfrage
+
     if (!response.ok) throw new Error("MapTiler reverse geocode failed");
 
     const data = await response.json();
     const feature = data?.features?.[0];
     if (!feature) throw new Error("No features returned from MapTiler");
 
-    const name = feature.properties?.name || '';
-    const countryName = feature.properties?.country || '';
+    let countryName = feature.properties?.country || '';
     let city = feature.properties?.city || '';
     let state = feature.properties?.state || '';
-    const countryId = findCountryIdByName(countries, countryName);
 
-    // Fallback, falls city oder state leer
-    if (!city && !state) {
+    if (!countryName) {
       const fallback = await fallbackReverseGeocode(lat, lng);
-      city = fallback.city;
-      state = fallback.state;
+      countryName = fallback.country;
+      city = city || fallback.city;
+      state = state || fallback.state;
     }
-
+    
     return {
-      name,
+      name: feature.properties?.name || '',
       country_name: countryName,
-      country_id: countryId || '',
       city,
       state,
-      description: '',
       lat,
       lng,
     };
+
   } catch (error) {
-    console.error("reverseGeocodeWithCountryId error:", error);
-    return {
-      name: '',
-      country_name: '',
-      country_id: '',
-      city: '',
-      state: '',
-      description: '',
-      lat,
-      lng,
-    };
+    console.error("reverseGeocode error:", error);
+    return { lat, lng, country_name: '', city: '', state: '', name: '' };
   }
 };
