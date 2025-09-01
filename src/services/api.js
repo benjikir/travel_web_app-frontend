@@ -80,11 +80,9 @@ export const addTrip = async (tripData) => {
   const payload = {
     trip_name: tripData.name, // The key MUST be 'trip_name'
     user_id: currentUserId,
-    startdate: tripData.start_date,  // Fixed: no underscore
-    enddate: tripData.end_date,      // Fixed: no underscore
-    country_id: tripData.country_id,
-    location_id: tripData.location_id || null,
-    notes: tripData.notes || ''
+    start_date: tripData.start_date || null,  // Fixed: no underscore
+    end_date: tripData.end_date || null,    // Fixed: no underscore
+    country_id: Number(tripData.country_id),
   };
   
   console.log("Sending payload:", payload); // Log the payload for debugging
