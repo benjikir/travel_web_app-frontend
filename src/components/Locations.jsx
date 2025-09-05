@@ -31,7 +31,7 @@ function Locations({ travelData, mapLocation, onLocationAdded }) {
     // Schritt 1: Das Formular wird immer angezeigt, sobald ein Klick erfolgt.
     if (mapLocation) {
       let foundCountryId = ''; // Standardmäßig ist die ID leer.
-
+      console.log("mapLocation geändert:", travelData, mapLocation);
       // Schritt 2: Wir versuchen den Abgleich NUR, wenn die Länderliste bereits geladen ist.
       if (countries && countries.length > 0) {
         const nameFromApi = mapLocation.country_name?.toLowerCase() || 'LEER';

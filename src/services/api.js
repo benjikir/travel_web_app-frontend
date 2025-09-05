@@ -77,22 +77,34 @@ export const addTrip = async (tripData) => {
   }
   
   // Ensure the payload EXACTLY matches the backend model
-  const payload = {
-    trip_name: tripData.name, // The key MUST be 'trip_name'
+const payload = {
+    trip_name: tripData.name,
     user_id: currentUserId,
-    start_date: tripData.start_date || null,  // Fixed: no underscore
-    end_date: tripData.end_date || null,    // Fixed: no underscore
     country_id: Number(tripData.country_id),
+    
+    // KORRIGIERT: Ohne Unterstrich, passend zur DB-Tabelle
+    startdate: tripData.start_date, 
+    enddate: tripData.end_date,
+    
+    // 'notes' wird jetzt korrekt mitgeschickt
+    notes: tripData.notes || null, 
+    
+    location_id: tripData.location_id || null
   };
   
-  console.log("Sending payload:", payload); // Log the payload for debugging
+  // Stellt sicher, dass leere Daten nicht als leerer String, sondern als NULL gesendet werden,
+  // aber da die Spalten NOT NULL sind, müssen wir sie immer senden. Wir validieren das besser im Frontend.
+  if (!payload.startdate || !payload.enddate) {
+      throw new Error("Start date and end date are required.");
+  }
+  
+  console.log("Sending final payload to backend:", payload); 
   
   try {
-    const res = await api.post("/trips/", payload); // Slashed path
+    const res = await api.post("/trips/", payload);
     return res.data;
   } catch (e) {
-    console.error("addTrip failed:", e?.response?.status, e?.response?.data || e.message);
-    throw e;
+    // ...
   }
 };
 
@@ -113,7 +125,7 @@ export const updateTrip = async (tripId, tripData) => {
 
 export const deleteTrip = async (tripId) => {
   // Add trailing slash
-  await api.delete(`/trips/${tripId}/`);
+  await api.delete(`/trips/${tripId}`);
 };
 
 // -------- LOCATIONS ----------
