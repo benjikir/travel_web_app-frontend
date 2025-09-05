@@ -11,7 +11,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import CountryCounter from './CountryCounter';
 import { reverseGeocode } from '@/utils/geocoding';
-import id from 'zod/v4/locales/id.cjs';
+
 
 // Leaflet Icon Fix
 delete L.Icon.Default.prototype._getIconUrl;
