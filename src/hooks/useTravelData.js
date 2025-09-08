@@ -82,23 +82,34 @@ export const useTravelData = (userId) => {
 
 
   // --- Action Functions for Locations ---
-  const addLocation = async (locationData) => {
+const addLocation = async (locationData) => {
     try {
       setLoading(prev => ({ ...prev, addLocation: true }));
-      const newLocation = await api.addLocation(locationData);
+      
+      // Schritt 1: Senden Sie den neuen Ort wie gewohnt an die API.
+      await api.addLocation(locationData);
+      
+      // Schritt 2 (NEU): Anstatt lokal zu aktualisieren, holen wir die komplette,
+      // aktuelle Liste der Orte erneut vom Server.
+      console.log("Ort gespeichert. Lade alle Orte vom Server neu...");
+      const updatedLocations = await api.getAllLocations();
+      
+      // Schritt 3 (NEU): Wir aktualisieren den State mit der frischen Liste.
+      // Dies garantiert, dass alle Komponenten die Änderung mitbekommen.
       setData(prevData => ({
         ...prevData,
-        locations: [...prevData.locations, newLocation].sort((a, b) => a.loc_name.localeCompare(b.loc_name))
+        locations: updatedLocations.sort((a, b) => a.loc_name.localeCompare(b.loc_name))
       }));
-      return newLocation;
+
     } catch (error) {
       console.error("Error adding location:", error);
-      throw error;
+      throw error; // Fehler weiterwerfen, damit die UI darauf reagieren kann
     } finally {
       setLoading(prev => ({ ...prev, addLocation: false }));
     }
   };
-
+  
+  
   const removeLocation = async (locationId) => {
     try {
       setLoading(prev => ({ ...prev, removeLocation: true }));
@@ -114,6 +125,8 @@ export const useTravelData = (userId) => {
       setLoading(prev => ({ ...prev, removeLocation: false }));
     }
   };
+
+
 
   const updateLocation = async (locationId, locationData) => {
     try {
