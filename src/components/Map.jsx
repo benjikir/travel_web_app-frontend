@@ -1,6 +1,9 @@
 // src/components/Map.jsx
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import "leaflet/dist/leaflet.css";
+import { LocateControl } from 'leaflet.locatecontrol';
+import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
+import "../styles/leaflet-guard.css";
 import L from "leaflet";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
 import MapControls from './MapControls';
@@ -47,54 +50,57 @@ const Map = ({ travelData }) => {
     return idSet;
   }, [travelData.locations]);
 
-  // --- KORREKTUR 1: useEffect NUR für die Karten-Initialisierung ---
-  // Dieser Hook läuft nur EINMAL, wenn die Komponente zum ersten Mal geladen wird.
+  // Map initialization
   useEffect(() => {
-    if (map.current) return; // Verhindert doppelte Initialisierung
+    if (map.current) return;
 
     map.current = new L.Map(mapContainer.current, {
       center: L.latLng(center.lat, center.lng),
       zoom: initialZoom,
       zoomControl: false,
+      
     });
 
-    // Der Klick-Handler wird hier einmalig und dauerhaft hinzugefügt.
     map.current.on('click', async (e) => {
       const { lat, lng } = e.latlng;
-      if (markerRef.current) { map.current.removeLayer(markerRef.current); }
+      if (markerRef.current) { 
+        map.current.removeLayer(markerRef.current); 
+      }
       markerRef.current = L.marker([lat, lng]).addTo(map.current).bindPopup(`Loading...`).openPopup();
       const locationData = await reverseGeocode(lat, lng);
       setNewLocation({ ...locationData, id: Date.now() });
-      setTimeout(() => { if (markerRef.current) { map.current.removeLayer(markerRef.current); } }, 500);
+      setTimeout(() => { 
+        if (markerRef.current) { 
+          map.current.removeLayer(markerRef.current); 
+        } 
+      }, 500);
     });
     
-    // Cleanup-Funktion, die die Karte entfernt, wenn die Komponente zerstört wird.
     return () => {
       if (map.current) {
         map.current.remove();
         map.current = null;
       }
     };
-  }, []); // Das leere Array [] ist entscheidend, damit dies nur einmal ausgeführt wird.
+  }, []);
 
-  // --- KORREKTUR 2: useEffect NUR für das Ändern des Karten-Stils (Tile Layer) ---
+  // Style layer
   useEffect(() => {
-    if (!map.current) return; // Warten, bis die Karte initialisiert ist.
+    if (!map.current) return;
 
     if (tileLayerRef.current) {
       map.current.removeLayer(tileLayerRef.current);
     }
     tileLayerRef.current = new MaptilerLayer({ apiKey, style }).addTo(map.current);
 
-    // Stellen Sie sicher, dass die Länder-Ebene immer im Hintergrund bleibt.
     if (countriesLayerRef.current) {
       countriesLayerRef.current.bringToBack();
     }
   }, [style, apiKey]);
 
-  // --- KORREKTUR 3: useEffect NUR für das Zeichnen der Länder-Ebene ---
+  // Countries layer
   useEffect(() => {
-    if (!map.current) return; // Warten, bis die Karte initialisiert ist.
+    if (!map.current) return;
 
     const fetchAndDrawCountries = async () => {
       try {
@@ -133,12 +139,44 @@ const Map = ({ travelData }) => {
     };
 
     fetchAndDrawCountries();
-  }, [visitedCountryIds]); // Dieser Hook hängt nur von den besuchten Ländern ab.
+  }, [visitedCountryIds]);
 
+  // Add locate control - MOVED TO SEPARATE useEffect
+  useEffect(() => {
+    if (!map.current) return;
+    
+    const locateControl = new LocateControl({
+      position: 'bottomleft',
+      flyTo: true,
+      showPopup: false,
+      strings: {
+        title: "Show me where I am"
+      },
+      locateOptions: {
+        enableHighAccuracy: true,
+        maximumAge: 60000,
+        timeout: 10000
+      }
+    });
+    
+    locateControl.addTo(map.current);
+    
+    return () => {
+      if (locateControl && map.current) {
+        locateControl.remove();
+      }
+    };
+  }, []);
 
   const handleZoomIn = () => map.current?.zoomIn();
   const handleZoomOut = () => map.current?.zoomOut();
-  const handleResetView = () => { map.current?.setView([center.lat, center.lng], initialZoom); if (markerRef.current) { map.current.removeLayer(markerRef.current); } setNewLocation(null); };
+  const handleResetView = () => { 
+    map.current?.setView([center.lat, center.lng], initialZoom); 
+    if (markerRef.current) { 
+      map.current.removeLayer(markerRef.current); 
+    } 
+    setNewLocation(null); 
+  };
 
   return (
     <div className="flex flex-col lg:flex-row h-[90vh] overflow-hidden shadow-lg border-white">
