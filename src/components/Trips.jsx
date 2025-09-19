@@ -1,27 +1,51 @@
 // src/components/Trips.jsx
-import React, { useState } from 'react';
-import { Plane, Plus, Calendar, Trash2 } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Plane, Plus, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 
-// --- KORRIGIERTES FORMULAR ---
+// Lokale Datumskonvertierung (ohne UTC-Shift) zu YYYY-MM-DD
+const toYMD = (d) => {
+  if (!(d instanceof Date)) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+// --- KORRIGIERTES FORMULAR mit neuem Kalender ---
 const AddTripForm = ({ countries, onAdd, onCancel }) => {
   const [formData, setFormData] = useState({
-    name: '', // GEÄNDERT: von title zu name
-    notes: '', // GEÄNDERT: von description zu notes, passend zum Backend
-    start_date: '',
-    end_date: '',
-    country_id: '', // HINZUGEFÜGT: Für das Länder-Dropdown
+    name: '',        // wie zuvor
+    notes: '',       // wie zuvor
+    start_date: '',  // ISO-String YYYY-MM-DD
+    end_date: '',    // ISO-String YYYY-MM-DD
+    country_id: '',  // Dropdown
   });
+
+  // Range-Kalender-State
+  const [dateRange, setDateRange] = useState({
+    from: undefined,
+    to: undefined,
+  });
+
+  // Aus Kalenderauswahl in Formularfelder spiegeln
+  useEffect(() => {
+    const start = toYMD(dateRange?.from);
+    const end = toYMD(dateRange?.to || dateRange?.from);
+    setFormData((f) => ({ ...f, start_date: start || '', end_date: end || '' }));
+  }, [dateRange]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.country_id) {
-        alert("Please select a country for your trip.");
-        return;
+      alert("Please select a country for your trip.");
+      return;
     }
     try {
-      await onAdd(formData); 
+      await onAdd(formData);
       setFormData({ name: '', notes: '', start_date: '', end_date: '', country_id: '' });
+      setDateRange({ from: undefined, to: undefined });
       onCancel();
     } catch (error) {
       console.error('Error adding trip:', error);
@@ -33,14 +57,14 @@ const AddTripForm = ({ countries, onAdd, onCancel }) => {
     <form onSubmit={handleSubmit} className="space-y-3 p-3 bg-white rounded border">
       <input
         type="text"
-        placeholder="Trip name" // GEÄNDERT
-        value={formData.name}   // GEÄNDERT
-        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} // GEÄNDERT
+        placeholder="Trip name"
+        value={formData.name}
+        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
         className="w-full p-2 border rounded text-sm"
         required
       />
-      
-      {/* --- NEUES LÄNDER-DROPDOWN (KRITISCH!) --- */}
+
+      {/* --- NEUES LÄNDER-DROPDOWN --- */}
       <select
         value={formData.country_id}
         onChange={(e) => setFormData(prev => ({ ...prev, country_id: e.target.value }))}
@@ -48,32 +72,37 @@ const AddTripForm = ({ countries, onAdd, onCancel }) => {
         required
       >
         <option value="" disabled>-- Select a Country --</option>
-        {countries.map(c => (
+        {(countries || []).map(c => (
           <option key={c.country_id} value={c.country_id}>{c.country}</option>
         ))}
       </select>
 
       <textarea
         placeholder="Notes (optional)"
-        value={formData.notes} // GEÄNDERT
-        onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))} // GEÄNDERT
+        value={formData.notes}
+        onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
         className="w-full p-2 border rounded text-sm"
         rows="2"
       />
 
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          type="date"
-          value={formData.start_date}
-          onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-          className="p-2 border rounded text-sm"
+      {/* --- NEUER RANGE-KALENDER statt 2x <input type="date" /> --- */}
+      <div className="space-y-2">
+        <label className="text-sm flex items-center gap-2">
+          <CalendarIcon className="h-4 w-4" /> Date range
+        </label>
+        <Calendar
+          mode="range"
+          defaultMonth={dateRange?.from}
+          selected={dateRange}
+          onSelect={setDateRange}
+          numberOfMonths={2}
+          className="rounded-lg border shadow-sm"
         />
-        <input
-          type="date"
-          value={formData.end_date}
-          onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-          className="p-2 border rounded text-sm"
-        />
+        <div className="text-xs text-muted-foreground">
+          {formData.start_date
+            ? `Start: ${formData.start_date}` + (formData.end_date ? ` • End: ${formData.end_date}` : '')
+            : 'Pick at least a start date'}
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -84,13 +113,11 @@ const AddTripForm = ({ countries, onAdd, onCancel }) => {
   );
 };
 
-
 function Trips({ travelData }) {
   const [showAddForm, setShowAddForm] = useState(false);
-  // Wir holen uns jetzt auch 'countries' für das Dropdown
   const { trips, countries, loading, addTrip, removeTrip } = travelData;
 
-  const countryMap = React.useMemo(() => {
+  const countryMap = useMemo(() => {
     if (!countries) return {};
     return countries.reduce((acc, c) => {
       acc[c.country_id] = c.country;
@@ -124,7 +151,7 @@ function Trips({ travelData }) {
       {showAddForm && (
         <div className="mb-3">
           <AddTripForm
-            countries={countries} // Geben die Länderliste an das Formular weiter
+            countries={countries}
             onAdd={addTrip}
             onCancel={() => setShowAddForm(false)}
           />
@@ -142,16 +169,19 @@ function Trips({ travelData }) {
               <div key={trip.trip_id} className="bg-white p-3 rounded border shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="font-medium text-gray-800">{trip.trip_name}</h4>
+                    {/* Anzeige mit normalisierten Feldern aus Hook */}
+                    <h4 className="font-medium text-gray-800">{trip.name || trip.trip_name}</h4>
                     <p className="text-sm text-gray-600">{countryMap[trip.country_id] || 'Unknown Country'}</p>
-                    {(trip.startdate || trip.enddate) && (
+
+                    {(trip.start_date || trip.end_date || trip.startdate || trip.enddate) && (
                       <p className="text-sm text-gray-600 flex items-center mt-1">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {formatDate(trip.startdate)}
-                        {trip.startdate && trip.enddate && ' - '}
-                        {formatDate(trip.enddate)}
+                        <CalendarIcon className="h-3 w-3 mr-1" />
+                        {formatDate(trip.start_date || trip.startdate)}
+                        {(trip.start_date || trip.startdate) && (trip.end_date || trip.enddate) && ' - '}
+                        {formatDate(trip.end_date || trip.enddate)}
                       </p>
                     )}
+
                     {trip.notes && (
                       <p className="text-sm text-gray-700 mt-1">{trip.notes}</p>
                     )}
