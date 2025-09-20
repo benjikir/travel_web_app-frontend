@@ -17,18 +17,39 @@ function Header() {
         {/* Left side - Burger menu with dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="p-2 rounded-md hover:bg-sky-200">
-              <Menu className="h-6 w-6 text-gray-700" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            <Link to="/" className="w-full">
-              <DropdownMenuItem className="cursor-pointer">Home</DropdownMenuItem>
-            </Link>
-            <Link to="/about" className="w-full">
-              <DropdownMenuItem className="cursor-pointer">About</DropdownMenuItem>
-            </Link>
-          </DropdownMenuContent>
+  <Button
+    variant="ghost"
+    size="icon"
+    aria-label="Open menu"
+    className="h-10 w-10 rounded-md hover:bg-sky-200 focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 dark:hover:bg-slate-800 dark:focus-visible:ring-sky-400 [&_svg]:size-6"
+  >
+    <Menu className="text-gray-700 dark:text-gray-200" aria-hidden="true" />
+  </Button>
+</DropdownMenuTrigger>
+<DropdownMenuContent
+  align="start"
+  className="w-48 rounded-md border border-sky-200/60 bg-white/95 shadow-lg backdrop-blur dark:border-slate-700 dark:bg-slate-900/95"
+>
+  <DropdownMenuItem
+    asChild
+    className="px-3 py-2 rounded-md cursor-pointer hover:bg-sky-50 focus:bg-sky-100 focus:text-sky-900 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+    onSelect={() => { /* optional: router prefetch or analytics */ }}
+  >
+    <Link to="/" className="flex w-full items-center gap-2">
+      Home
+    </Link>
+  </DropdownMenuItem>
+
+  <DropdownMenuItem
+    asChild
+    className="px-3 py-2 rounded-md cursor-pointer hover:bg-sky-50 focus:bg-sky-100 focus:text-sky-900 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+  >
+    <Link to="/about" className="flex w-full items-center gap-2">
+      About
+    </Link>
+  </DropdownMenuItem>
+</DropdownMenuContent>
+
         </DropdownMenu>
 
         {/* Center - App Title with Logo */}
