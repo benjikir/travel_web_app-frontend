@@ -1,26 +1,18 @@
-import { createBrowserRouter } from 'react-router-dom';
-import Layout from './components/Layout';
-import HomePage from './pages/HomePage';
-import AboutPage from './pages/AboutPage';
-// Import your LoginPage here as well when you create it
+// src/router.jsx
+import { createBrowserRouter } from "react-router-dom";
+import Layout from "./components/Layout";
+import HomePage from "./pages/HomePage";
+import AboutPage from "./pages/AboutPage";
+import LoginPage from "./pages/LoginPage";
 
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: <Layout />, // Use the Layout component for all child routes
+    path: "/",
+    element: <Layout />,
     children: [
-      {
-        index: true, // This makes HomePage the default page for "/"
-        element: <HomePage />,
-      },
-      {
-        path: 'about',
-        element: <AboutPage />,
-      },
-      // {
-      //   path: 'login',
-      //   element: <LoginPage />,
-      // },
+      { index: true, element: <HomePage /> },
+      { path: "about", element: <AboutPage /> },
+      { path: "login", element: <LoginPage /> },
     ],
   },
 ]);

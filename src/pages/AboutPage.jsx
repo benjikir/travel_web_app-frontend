@@ -1,4 +1,4 @@
-/*
+
 function AboutPage() {
   return (
     <div className="container mx-auto p-4">
@@ -11,4 +11,3 @@ function AboutPage() {
 }
 
 export default AboutPage;
-*/

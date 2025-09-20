@@ -1,9 +1,9 @@
-/*
-//import Map from '@/components/Map';
+
+import Map from '@/components/Map';
 import { useTravelData } from '@/hooks/useTravelData';
 import ErrorBanner from '@/components/ErrorBanner';
 
-//function HomePage() {
+function HomePage() {
   const travelData = useTravelData(1); // Default user ID = 1
   const isLoading = Object.values(travelData.loading).some(Boolean); 
 
@@ -21,4 +21,3 @@ import ErrorBanner from '@/components/ErrorBanner';
   );
 }
 export default HomePage;
-*/
