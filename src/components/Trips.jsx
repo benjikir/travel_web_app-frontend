@@ -106,7 +106,7 @@ const AddTripForm = ({ countries, onAdd, onCancel }) => {
       </div>
 
       <div className="flex gap-2">
-        <Button type="submit" size="sm" className="flex-1">Add Trip</Button>
+        <Button type="submit" size="sm" variant="outline" className="flex-1">Add Trip</Button>
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
       </div>
     </form>
