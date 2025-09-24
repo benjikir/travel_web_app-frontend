@@ -1,40 +1,114 @@
 // src/components/MapControls.jsx
-import React from 'react';
-import { ZoomIn, ZoomOut, RotateCcw, Home } from 'lucide-react';
+import React from "react";
+import { ZoomIn, ZoomOut, Home, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const MapControls = ({ onZoomIn, onZoomOut, onReset, className = "" }) => {
+const MapControls = ({ 
+  onZoomIn, 
+  onZoomOut, 
+  onReset, 
+  onLocate, 
+  isLocating = false,
+  className = "" 
+}) => {
   return (
-    <div className={`absolute top-4 left-4 z-10 flex flex-col space-y-2 ${className}`}>
-      <Button
-        onClick={onZoomIn}
-        size="icon"
-        variant="secondary"
-        className="bg-white/90 hover:bg-white shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105"
-        aria-label="Zoom in"
-      >
-        <ZoomIn className="h-4 w-4 text-gray-700" />
-      </Button>
-      
-      <Button
-        onClick={onZoomOut}
-        size="icon"
-        variant="secondary"
-        className="bg-white/90 hover:bg-white shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105"
-        aria-label="Zoom out"
-      >
-        <ZoomOut className="h-4 w-4 text-gray-700" />
-      </Button>
-      
-      <Button
-        onClick={onReset}
-        size="icon"
-        variant="secondary"
-        className="bg-white/90 hover:bg-white shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105"
-        aria-label="Reset to world view"
-      >
-        <Home className="h-4 w-4 text-gray-700" />
-      </Button>
+    <div className={`absolute top-4 left-4 z-10 ${className}`}>
+      {/* Floating Container with Glass Morphism */}
+      <div className="flex flex-col gap-0.5 p-0.5 bg-white/80 backdrop-blur-md 
+                      rounded-xl border border-white/20 shadow-xl 
+                      hover:shadow-2xl hover:bg-white/90 
+                      transition-all duration-300 ease-out
+                      animate-fade-in">
+        
+        {/* Zoom In Button */}
+        <Button
+          onClick={onZoomIn}
+          size="icon"
+          variant="outline"
+          className="h-10 w-10 bg-white/60 backdrop-blur-sm border border-gray-200/50
+                     hover:bg-white hover:scale-105 hover:shadow-lg hover:border-blue-300
+                     active:scale-95 transition-all duration-200 ease-out
+                     focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                     group"
+          title="Zoom In"
+        >
+          <ZoomIn className="h-4 w-4 text-gray-700 transition-colors duration-200 
+                           group-hover:text-blue-600" />
+        </Button>
+
+        {/* Zoom Out Button */}
+        <Button
+          onClick={onZoomOut}
+          size="icon"
+          variant="outline"
+          className="h-10 w-10 bg-white/60 backdrop-blur-sm border border-gray-200/50
+                     hover:bg-white hover:scale-105 hover:shadow-lg hover:border-blue-300
+                     active:scale-95 transition-all duration-200 ease-out
+                     focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                     group"
+          title="Zoom Out"
+        >
+          <ZoomOut className="h-4 w-4 text-gray-700 transition-colors duration-200 
+                            group-hover:text-blue-600" />
+        </Button>
+
+        {/* Reset View Button */}
+        <Button
+          onClick={onReset}
+          size="icon"
+          variant="outline"
+          className="h-10 w-10 bg-white/60 backdrop-blur-sm border border-gray-200/50
+                     hover:bg-white hover:scale-105 hover:shadow-lg hover:border-orange-300
+                     active:scale-95 transition-all duration-200 ease-out
+                     focus:ring-2 focus:ring-orange-500 focus:ring-offset-2
+                     group"
+          title="Reset View"
+        >
+          <Home className="h-4 w-4 text-gray-700 transition-colors duration-200 
+                          group-hover:text-orange-600" />
+        </Button>
+
+        {/* Locate Button with Loading State */}
+        <Button
+          onClick={onLocate}
+          size="icon"
+          variant="outline"
+          disabled={isLocating}
+          className="h-10 w-10 bg-white/60 backdrop-blur-sm border border-gray-200/50
+                     hover:bg-white hover:scale-105 hover:shadow-lg hover:border-green-300
+                     active:scale-95 transition-all duration-200 ease-out
+                     focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                     disabled:opacity-70 disabled:cursor-not-allowed 
+                     disabled:hover:scale-100 disabled:hover:shadow-none
+                     disabled:hover:border-gray-200/50
+                     group relative overflow-hidden"
+          title={isLocating ? "Locating..." : "Find My Location"}
+        >
+          {/* Loading Animation Background */}
+          {isLocating && (
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-green-400/20 
+                            animate-pulse" />
+          )}
+          
+          {isLocating ? (
+            <Loader2 className="h-4 w-4 text-blue-600 animate-spin relative z-10" />
+          ) : (
+            <MapPin className="h-4 w-4 text-gray-700 transition-colors duration-200 
+                             group-hover:text-green-600 relative z-10" />
+          )}
+          
+          {/* Hover Effect Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
+                          translate-x-[-100%] group-hover:translate-x-[100%] 
+                          transition-transform duration-700 ease-out" />
+        </Button>
+
+        {/* Decorative Glow Effect */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-green-500/20 
+                        rounded-xl opacity-0 group-hover:opacity-100 
+                        transition-opacity duration-500 -z-10 blur-sm
+                        animate-pulse" />
+      </div>
     </div>
   );
 };

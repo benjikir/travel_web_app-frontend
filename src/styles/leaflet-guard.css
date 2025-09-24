@@ -1,47 +1,76 @@
-/* Prevent Tailwind preflight from affecting Leaflet controls */
-.leaflet-container .leaflet-control a,
-.leaflet-container .leaflet-control button {
-  all: unset;
-  display: inline-block;
-  cursor: pointer;
-}
-
-.leaflet-container .leaflet-bar a {
-  width: 26px;
-  height: 26px;
-  line-height: 26px;
-  text-align: center;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,.2);
-  border-radius: 2px;
-  text-decoration: none;
-  color: black;
-}
-
-.leaflet-container .leaflet-bar a:hover {
-  background: #f4f4f4;
-}
-
-/* Specific styles for locate control */
 .leaflet-container .leaflet-control-locate a {
-  background: #fff !important;
-  border: 1px solid #ccc !important;
-  width: 26px !important;
-  height: 26px !important;
+  border: none !important;
+  background-clip: unset !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 10px rgba(30, 100, 160, 0.20) !important;
+  transition: box-shadow 0.2s, transform 0.22s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: visible;
 }
 
-/* Alle Attributionen verstecken */
+.leaflet-container .leaflet-control-locate a:hover {
+  box-shadow: 0 6px 18px rgba(36,160,255,0.32) !important;
+  transform: scale(1.2);
+  border-color: #24a0ff !important;
+}
+
+.leaflet-container .leaflet-control-locate a::after {
+  content: "";
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: rgba(36,160,255,0.12);
+  z-index: 0;
+  animation: locate-ping 1.3s infinite cubic-bezier(0.19, 1, 0.22, 1);
+  pointer-events: none;
+}
+
+@keyframes locate-ping {
+  0% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  70% {
+    opacity: 0.30;
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.0);
+  }
+}
+
+
 .leaflet-control-attribution {
   display: none !important;
 }
 
-/* In deine leaflet-guard.css hinzufügen */
+
 img[alt="MapTiler logo"] {
   display: none !important;
 }
 
-/* Oder allgemeiner: */
+
 .mapboxgl-ctrl-logo,
 .maptiler-logo {
   display: none !important;
 }
+
+.leaflet-control-locate,
+.leaflet-control-locate a,
+.leaflet-control-locate a.leaflet-bar-part,
+.leaflet-bar a {
+  border: none !important;
+  background-clip: unset !important;
+}
+
+
