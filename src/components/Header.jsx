@@ -68,20 +68,6 @@ function Header() {
 
         {/* Right side - Profile icon with dropdown and Login button */}
         <div className="flex items-end-safe space-x-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="p-2 rounded-full hover:bg-sky-200">
-                <User className="h-6 w-6 text-gray-700" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem className="cursor-pointer">Profile</DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">Settings</DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Login Button -> React Router Link */}
           <Button asChild className="ml-auto bg-blue-600 hover:bg-blue-700 text-white">
             <Link to="/login">Login</Link>
           </Button>
