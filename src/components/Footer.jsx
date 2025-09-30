@@ -11,7 +11,7 @@ function Footer() {
         <h4>The Travelweb App©</h4>
       </div>
       <nav className="flex-1 flex justify-end">
-        <a href="/contact" className="text-black text-1xl hover:text-blue-700">Contact</a>
+        <a href="/impressum" className="text-black text-1xl hover:text-blue-700">Impressum</a>
       </nav>
     </footer>
   );

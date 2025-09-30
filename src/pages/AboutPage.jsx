@@ -33,8 +33,8 @@ return (
             <Globe className="h-8 w-8 text-blue-600" />
           </div>
           
-          <h1 className="text-5xl font-bold text-gray-900 mb-6 bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-            Your Travel Journey, Visualized
+          <h1 className="text-4xl font-bold text-gray-900 mb-6 bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+            Your Travel Journey, Visualized with the Travelweb App!
           </h1>
           
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
