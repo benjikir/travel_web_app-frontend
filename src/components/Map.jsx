@@ -12,6 +12,9 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import CountryCounter from './CountryCounter';
 import { reverseGeocode } from '@/utils/geocoding';
+import { countryNameToGeoJsonId } from '@/utils/countryMapping';
+
+
 
 // Leaflet Icon Fix
 delete L.Icon.Default.prototype._getIconUrl;
@@ -43,12 +46,44 @@ const Map = ({ travelData }) => {
   const countriesLayerRef = useRef(null);
 
   const visitedCountryIds = useMemo(() => {
-    if (!travelData.locations || travelData.locations.length === 0) return new Set();
-    const ids = travelData.locations.map(loc => loc.country_id).filter(Boolean);
-    const idSet = new Set(ids);
-    console.log('[DEBUG 1] Besuchte Länder-IDs (aus DB):', idSet);
-    return idSet;
-  }, [travelData.locations]);
+  if (!travelData.locations || travelData.locations.length === 0) return new Set();
+  if (!travelData.countries || travelData.countries.length === 0) return new Set();
+  
+  console.log("[DEBUG 1] Alle Locations:", travelData.locations);
+  
+  // ✅ Erstelle ein Mapping von country_id zu country_name
+  const countryIdToName = {};
+  travelData.countries.forEach(country => {
+    countryIdToName[country.country_id] = country.country; // z.B. 85 → "Germany"
+  });
+  
+  console.log("[DEBUG 1a] countryIdToName Mapping:", countryIdToName);
+  
+  // ✅ Hole alle unique country_ids aus den Locations
+  const uniqueCountryIds = [...new Set(
+    travelData.locations
+      .map(loc => loc.country_id) // Integer IDs wie 85, 106, etc.
+      .filter(id => id != null)
+  )];
+  
+  console.log("[DEBUG 1b] Unique country_ids aus DB:", uniqueCountryIds);
+  
+  // ✅ Konvertiere country_id → country_name → GeoJSON ID
+  const countryNames = uniqueCountryIds
+    .map(id => countryIdToName[id])
+    .filter(Boolean);
+  
+  console.log("[DEBUG 1c] Konvertierte Ländernamen:", countryNames);
+  
+  // ✅ Konvertiere Namen zu GeoJSON IDs
+  const geoJsonIds = countryNames
+    .map(name => countryNameToGeoJsonId[name])
+    .filter(Boolean);
+  
+  console.log("[DEBUG 1d] Finale GeoJSON IDs:", geoJsonIds);
+  
+  return new Set(geoJsonIds);
+}, [travelData.locations, travelData.countries]);
 
   // Map initialization
   useEffect(() => {
@@ -131,54 +166,57 @@ const Map = ({ travelData }) => {
     tileLayerRef.current = new MaptilerLayer({ apiKey, style }).addTo(map.current);
 
     if (countriesLayerRef.current) {
+      setTimeout(() => {
       countriesLayerRef.current.bringToBack();
+      }, 100);
     }
   }, [style, apiKey]);
 
   // Countries layer
   useEffect(() => {
-    if (!map.current) return;
+  if (!map.current || !travelData.locations || !travelData.countries) return;
 
-    const fetchAndDrawCountries = async () => {
-      try {
-        console.log('[DEBUG 2] Versuche, /countries.geojson zu laden...');
-        const response = await fetch('/countries.geojson');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        console.log('[DEBUG 3] countries.geojson erfolgreich geladen.');
-        const geojsonData = await response.json();
+  // Entferne alte Layer
+  if (countriesLayerRef.current) {
+    countriesLayerRef.current.remove();
+  }
 
-        if (countriesLayerRef.current) {
-          map.current.removeLayer(countriesLayerRef.current);
-        }
+  const fetchCountries = async () => {
+    try {
+      console.log("[DEBUG 2] Versuche, /countries-geo.json zu laden...");
+      const response = await fetch('/countries-geo.json');
+      const geojsonData = await response.json();
+      console.log("[DEBUG 3] countries-geo.json erfolgreich geladen.");
 
-        countriesLayerRef.current = L.geoJSON(geojsonData, {
-          style: (feature) => {
-            const countryId = feature.properties.id;
-            const isVisited = visitedCountryIds.has(countryId);
-
-            if (isVisited) {
-                console.log(`[DEBUG 4 - TREFFER!] Land (ID: ${countryId}) wird markiert.`);
-            }
-
-            return {
-              fillColor: isVisited ? '#3b82f6' : 'transparent',
-              weight: isVisited ? 1.5 : 0,
-              color: '#3b82f6',
-              fillOpacity: isVisited ? 0.5 : 0,
-            };
+      countriesLayerRef.current = L.geoJSON(geojsonData, {
+        style: (feature) => {
+          const geoJsonId = feature.id; // z.B. "DEU", "ITA"
+          const isVisited = visitedCountryIds.has(geoJsonId);
+          
+          if (isVisited) {
+            console.log(`[DEBUG 4 - TREFFER!] Land (ID: ${geoJsonId}) wird markiert.`);
           }
-        }).addTo(map.current);
-        
-        countriesLayerRef.current.bringToBack();
-      } catch (error) {
-        console.error("Fehler im fetchAndDrawCountries-Effekt:", error);
-      }
-    };
+          
+          return {
+            fillColor: isVisited ? '#3b82f6' : 'transparent',
+            weight: isVisited ? 1.5 : 0,
+            color: '#3b82f6',
+            fillOpacity: isVisited ? 0.5 : 0,
+          };
+        }
+      }).addTo(map.current);
 
-    fetchAndDrawCountries();
-  }, [visitedCountryIds]);
+      countriesLayerRef.current.bringToBack();
+    } catch (error) {
+      console.error("[ERROR] Fehler beim Laden der Länder:", error);
+    }
+  };
 
-  // Map control handlers
+  fetchCountries();
+}, [visitedCountryIds, travelData.locations, travelData.countries]); 
+  
+
+// Map control handlers
   const handleZoomIn = () => map.current?.zoomIn();
   const handleZoomOut = () => map.current?.zoomOut();
   
